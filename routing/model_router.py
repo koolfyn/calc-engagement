@@ -11,8 +11,7 @@ def choose_model(
 
      if mode=="conceptual":
 
-          return "openai/gpt-4o-mini"
+          return "openai/gpt-oss-120b:free"
 
 
      return "openrouter/owl-alpha"
-
