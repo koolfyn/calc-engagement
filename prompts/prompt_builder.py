@@ -30,5 +30,5 @@ Student input:
 
 {user_input}
 
-Respond using the recommended teaching mode.
+Responding using the recommended teaching mode...
 """
