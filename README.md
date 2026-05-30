@@ -165,7 +165,17 @@ main.py
 ```
 
 ---
+## How To Personalize It
 
+If you want to adapt this MVP to your own tutoring workflow, the fastest changes are:
+
+- Change the target concept in `main.py` when calling `build_context(...)`.
+- Update the prompt template in `prompts/prompt_builder.py` to reflect your tone, structure, or output format.
+- Change the routing logic in `routing/model_router.py` if your use case needs different models for different teaching styles.
+- Replace the hard-coded example learner state in `adapters/teaching_adapter.py` with real learner data.
+- Expand `adapters/knowledge_graph_adapter.py` with your own domain concepts, tags, and prerequisite chains.
+- Add retrieval behavior in `retrieval/retriever.py` when you want the system to pull in documents, lessons, or prior attempts instead of relying only on static context.
+- 
 ## Running The Demo
 
 Create a local `.env` file:
