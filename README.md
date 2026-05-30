@@ -1,109 +1,274 @@
 # Calc Engagement MVP
 
-This repository is a public-facing minimum viable product for an AP Calculus tutoring workflow built around the Capillary Actions SDK. It is intentionally not the final architecture. The goal of this repo is to show the working foundations: how learner state, knowledge graphs, prompt assembly, model routing, and LLM execution fit together today, and how those pieces can be split into smaller reusable modules next.
+## Overview
 
-## What This Demo Does
+This project was developed as part of **Track 2: Learning Actions** within the Capillary Actions ecosystem.
 
-The current flow is simple:
+The long-term research question driving this work is:
 
-1. Build a teaching context for a learner and a target concept.
-2. Build a prompt from that context.
-3. Choose a model based on the recommended teaching mode.
-4. Send the prompt to OpenRouter and print the response.
+> How can we flatten the outcome curve for students with varying learning needs while maintaining the same quality of content and instruction?
 
-That makes this repo useful as a reference implementation, but it is still fairly monolithic. The next step is to separate the agentic layer from the execution routine so a routine can stand on its own, be defined externally, and then be executed by a different agent or runtime.
+To explore this question, I built a proof-of-concept adaptive tutoring system focused on **AP Calculus BC**. The system combines a domain knowledge graph, learner memory, prompt augmentation, model routing, and LLM generation to create personalized learning engagements based on where a student is in the curriculum and how they have interacted with previous lessons.
 
-```mermaid
-flowchart LR
-  A[main.py] --> B[Teaching Adapter]
-  B --> C[Teaching Context]
-  C --> D[Prompt Builder]
-  C --> E[Model Router]
-  D --> F[OpenRouter Client]
-  E --> F
-  F --> G[Response]
+Rather than acting as a generic chatbot, the goal is to move toward a system that can determine:
+
+* What the learner already knows
+* Where the learner is struggling
+* What concept should be taught next
+* How that concept should be presented to the learner
+
+The current implementation validates these ideas against the Capillary SDK architecture while providing a working end-to-end tutoring workflow.
+
+---
+
+## Educational Motivation
+
+Many AI tutoring systems focus primarily on generating answers.
+
+This project explores a different approach:
+
+* The curriculum itself should be structured.
+* Learner progress should be tracked over time.
+* Student interactions should leave "breadcrumbs" that influence future instruction.
+* Different learners may benefit from different teaching approaches while still covering the same core material.
+
+For the MVP, AP Calculus BC was chosen as a high-demand subject with a well-defined prerequisite structure that naturally lends itself to knowledge graph modeling.
+
+---
+
+## Current Architecture
+
+The current workflow is:
+
+Student Input
+
+↓
+
+Teaching Context Assembly
+
+↓
+
+Prompt Augmentation
+
+↓
+
+Model Routing
+
+↓
+
+OpenRouter Generation
+
+↓
+
+Outcome Recording
+
+↓
+
+Updated Learner State
+
+The system currently combines two major forms of knowledge:
+
+### Domain Knowledge Graph
+
+Represents the curriculum itself.
+
+Examples include:
+
+* Limits
+* Derivatives
+* Integrals
+* Prerequisite relationships between concepts
+
+The graph provides structure for determining what can be taught and what concepts depend on one another.
+
+### Learner Model / Memory
+
+Represents the individual learner.
+
+Examples include:
+
+* Mastery scores
+* Completed concepts
+* Previous confusion points
+* Recommended instructional approach
+
+Together, these components determine the next learning engagement presented to the student.
+
+---
+
+## Capillary SDK Integration
+
+This project validates the **Learner Interaction** track of the Capillary Actions SDK.
+
+Implemented concepts include:
+
+* KnowledgeGraph
+* KnowledgeConcept
+* LearnerProgress
+* TeachingContext
+
+The MVP uses Capillary's domain models and ports to structure educational data while OpenRouter serves as the generation layer.
+
+In practice:
+
+* Capillary provides the educational domain structure.
+* OpenRouter provides LLM execution.
+* Prompt augmentation connects the two.
+
+This separation allows teaching logic to remain independent from any specific model provider.
+
+---
+
+## What This MVP Demonstrates
+
+The current proof-of-concept successfully demonstrates:
+
+* Knowledge graph driven curriculum structure
+* Learner progress tracking
+* Teaching context assembly
+* Prompt augmentation
+* OpenRouter integration
+* Model routing based on instructional needs
+* Personalized tutoring responses
+
+Example learner context may include:
+
+* Current concept: Integrals
+* Mastery of prerequisite concepts
+* Previous confusion with the Power Rule
+* Recommended teaching style: Conceptual
+
+The generated response is then tailored using that context rather than relying solely on the student's raw message.
+
+---
+
+## Repository Structure
+
+```text
+main.py
+├── adapters/
+│   ├── knowledge_graph_adapter.py
+│   ├── learner_progress_adapter.py
+│   └── teaching_adapter.py
+│
+├── prompts/
+│   └── prompt_builder.py
+│
+├── routing/
+│   └── model_router.py
+│
+├── retrieval/
+│   └── retriever.py
+│
+└── llm/
+    └── openrouter_client.py
 ```
 
-## Repo Layout
+---
 
-- `main.py` runs the end-to-end demo.
-- `adapters/knowledge_graph_adapter.py` defines example Calculus concepts and prerequisite relationships.
-- `adapters/learner_progress_adapter.py` stores learner mastery data.
-- `adapters/teaching_adapter.py` builds the teaching context consumed by the prompt.
-- `prompts/prompt_builder.py` turns context plus user input into a prompt.
-- `routing/model_router.py` selects a model from the teaching mode.
-- `llm/openrouter_client.py` sends the prompt to OpenRouter.
-- `retrieval/retriever.py` is the current placeholder for retrieval logic.
+## Running The Demo
 
-## Getting Started
+Create a local `.env` file:
 
-1. Install Python dependencies used by the demo.
-2. Create a `.env` file in the project root.
-3. Add your own `OPENROUTER_API_KEY` value.
-4. Run `main.py`.
-
-Keep `.env` local and out of source control.
-
-Example environment setup:
-
-```bash
+```env
 OPENROUTER_API_KEY=your_key_here
 ```
 
-Run the demo:
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run:
 
 ```bash
 python main.py
 ```
 
-## How To Personalize It
+The system will:
 
-If you want to adapt this MVP to your own tutoring workflow, the fastest changes are:
+1. Build a learner teaching context
+2. Assemble an augmented prompt
+3. Select a model
+4. Generate a tutoring response through OpenRouter
 
-- Change the target concept in `main.py` when calling `build_context(...)`.
-- Update the prompt template in `prompts/prompt_builder.py` to reflect your tone, structure, or output format.
-- Change the routing logic in `routing/model_router.py` if your use case needs different models for different teaching styles.
-- Replace the hard-coded example learner state in `adapters/teaching_adapter.py` with real learner data.
-- Expand `adapters/knowledge_graph_adapter.py` with your own domain concepts, tags, and prerequisite chains.
-- Add retrieval behavior in `retrieval/retriever.py` when you want the system to pull in documents, lessons, or prior attempts instead of relying only on static context.
+---
 
-## Capillary SDK Foundation
+## Current Limitations
 
-This repo is meant to show how the Capillary-style pieces fit together:
+This repository intentionally prioritizes architecture validation over production readiness.
 
-- A knowledge graph defines what can be taught.
-- Learner progress tracks what the learner already knows.
-- A teaching context combines concept state, learner state, and working memory.
-- A prompt builder turns that context into an LLM-ready instruction.
-- A model router chooses the right model for the teaching mode.
-- A client layer actually executes the request.
+Currently:
 
-That separation matters because it lets the teaching logic stay stable even when the underlying execution changes.
+* Learner data is hard-coded
+* Retrieval is a placeholder
+* RAG is not fully implemented
+* Knowledge graphs are manually defined
+* Routine definition and execution are tightly coupled
+* Validation tools are not yet implemented
 
-## How To Break This Up Next
+These limitations are deliberate and help expose the next architectural steps.
 
-The biggest architectural improvement is to package the routine separately from the agent.
+---
 
-Instead of one repo where the routine, prompting, routing, and execution are all coupled together, the next version should make the routine standalone. A future routine definition could live in YAML and describe enough of the behavior that any compatible agent can execute it remotely.
+## Next Steps
 
-That gives you a cleaner boundary:
+The most important next step is separating the educational routine from the agent that executes it.
 
-- the routine defines what should happen,
-- the agent decides how to execute it,
-- the tools handle narrow tasks such as validation, retrieval, or grading without guessing.
+Today:
 
-This also makes the system easier to test. For example, a calculus homework validator should be able to inspect an answer against a rubric or prerequisite graph rather than inventing missing reasoning.
+```text
+Routine
++
+Prompt Logic
++
+Routing
++
+Execution
+```
 
-## Practical Extension Ideas
+all live inside a single repository.
 
-1. Move the demo flow into a reusable routine definition.
-2. Define input/output contracts for each module so the execution layer stays predictable.
-3. Add a validation tool that checks calculus work against known concepts and prerequisites.
-4. Replace the hard-coded sample learner and concept data with persistent storage.
-5. Add retrieval so the system can reference prior lessons, notes, or homework attempts.
+The intended direction is:
 
-## Notes
+```text
+Routine Definition (YAML)
 
-- This project is a demo, not a production system.
-- The prompt format, routing rules, and teaching context are all meant to be edited.
-- The current code intentionally shows the seams you would later extract into independent tools or remote routines.
+↓
+
+Agent Runtime
+
+↓
+
+Tools
+
+↓
+
+Execution
+```
+
+In this model:
+
+* A routine defines what should happen.
+* An agent determines how to execute it.
+* Modular tools perform specialized tasks.
+
+This would allow the same tutoring workflow to be executed by different agents while maintaining identical educational behavior.
+
+It also enables more reliable educational tooling, such as:
+
+* Homework validation
+* Concept mastery checks
+* Rubric-based grading
+* Prerequisite verification
+
+without relying on the LLM to guess.
+
+---
+
+## Research Direction
+
+This MVP is not the final product.
+
+It is an architectural experiment exploring how learner memory, knowledge graphs, educational standards, retrieval, and AI generation can work together to create adaptive learning experiences that scale to students with different backgrounds, learning preferences, and instructional needs.
